@@ -2,7 +2,7 @@
 
 **工作流追踪与价值计算。** 评估你的 Agent 做了什么、做的好吗 → 自动校验 → 追踪每一步 → 生成价值报告。知道 Agent 帮你省了多少、创造了多少价值。
 
-*AI Agent's "ledger" for workflow tracking & value calculation. What did your Agent do? Did it do it well? What's it worth? Three questions, one tool.*
+*AI Agent's "ledger" for workflow tracking and value calculation. Evaluate what your agent has done and how well it has done ➡️ Automatically verify ➡️ Track every step ➡️ Generate value reports. Know how much money the agent has helped you earn.*
 
 ---
 
