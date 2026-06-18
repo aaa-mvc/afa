@@ -31,10 +31,14 @@ class Runtime:
 
     def __init__(
         self,
-        dag: DAG,
+        dag: "DAG | Flow",
         mode: RuntimeMode = RuntimeMode.LIVE,
     ):
-        self.dag = dag
+        # Accept Flow too: compile it automatically
+        from actflow.flow.flow import Flow
+        if isinstance(dag, Flow):
+            dag = dag.compile()
+        self.dag: DAG = dag
         self.mode = mode
         self._bindings: dict[str, Callable[..., dict[str, Any]]] = {}
         self._action_registry: dict[str, ActionDef] = {}
@@ -113,6 +117,7 @@ class Runtime:
 
                 # propagate output into state
                 prefix = f"{step.action_name}.output"
+                self._state[prefix] = dict(step_trace.output)  # full dict
                 for k, v in step_trace.output.items():
                     self._state[f"{prefix}.{k}"] = v
 
@@ -192,6 +197,21 @@ class Runtime:
                     if dep_key in self._state:
                         step_input[key] = self._state[dep_key]
                         break
+                    # 2b. if no specific field match, try full output dict
+                    dep_full = f"{dep}.output"
+                    if dep_full in self._state and isinstance(self._state[dep_full], dict):
+                        if key in self._state[dep_full]:
+                            step_input[key] = self._state[dep_full][key]
+                            break
+                        # 2c. if input field name appears in dep name (or vice versa),
+                        #     and input expects dict, map full output to this field
+                        expected = action_def.input_schema.get(key)
+                        if expected in (dict, list) and (
+                            key in dep or dep in key or
+                            dep.replace("_", "") in key or key.replace("_", "") in dep
+                        ):
+                            step_input[key] = self._state[dep_full]
+                            break
                 else:
                     # 3. plain key in state (e.g. from initial state)
                     if key in self._state:
